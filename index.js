@@ -1,88 +1,118 @@
-const registrationForm = document.getElementById('registration-form');
-const registrationTableBody = document.getElementById('registration-table-body');
-
-registrationForm.addEventListener('submit', function(event) {
-  event.preventDefault();
-  
-  const nameInput = document.getElementById('name');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const dobInput = document.getElementById('dob');
-  const termsInput = document.getElementById('terms');
-
-  const name = nameInput.value;
-  const email = emailInput.value;
-  const password = passwordInput.value;
-  const dob = dobInput.value;
-  const terms = termsInput.checked;
-
-  const validEmail = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
-  
-
-
-  if (!email || !dob) {
-    document.getElementById('error').innerHTML='<i class="fa-solid fa-circle-exclamation"></i>Please fill out all required fields.';
-    return;
+function Check_the_dob(dob) {
+  var age = new Date().getFullYear() - new Date(dob.value).getFullYear();
+  if (age < 18 || age > 55) {
+    dob.setCustomValidity("The age should be between 18 and 55");
+    dob.reportValidity();
+  } else {
+    dob.setCustomValidity("");
   }
-
-  if(email=="" || !validEmail.test(email))
-  {
-    document.getElementById("email-error").innerHTML='<i class="fa-solid fa-circle-exclamation"></i>Please enter valid email address.';
-    return;
-  }
-
-  const today = new Date();
-  const dobDate = new Date(dob);
-  const ageInMilliseconds = today - dobDate;
-  const ageInYears = ageInMilliseconds / 1000 / 60 / 60 / 24 / 365.25;
-
-  if (ageInYears < 18 || ageInYears > 55 ) {
-    document.getElementById('birthday-error').innerHTML='<i class="fa-solid fa-circle-exclamation"></i>Your age must between 18 and 55 years to register.';
-    return;
-  }
-
-  function store(){
-
-    const data = {
-      name: name,
-        email: email,
-        password: password,
-        dob: dob,
-        terms: terms,
-    };
-    var num=window.localStorage.length+1;
-    window.localStorage.setItem(num,JSON.stringify(data));  
-    
-      var myData = JSON.parse(window.localStorage.getItem(num));
-  const row = document.createElement('tr');
-
-    const nameCell = document.createElement('td');
-    nameCell.textContent = myData.name;
-    row.appendChild(nameCell);
-
-    const emailCell = document.createElement('td');
-    emailCell.textContent = myData.email;
-    row.appendChild(emailCell);
-
-    const passwordCell = document.createElement('td');
-    passwordCell.textContent = myData.password;
-    row.appendChild(passwordCell);
-
-    const dobCell = document.createElement('td');
-    dobCell.textContent = myData.dob;
-    row.appendChild(dobCell);
-
-    const termsCell = document.createElement('td');
-    termsCell.textContent = myData.terms;
-    row.appendChild(termsCell);
-
-    registrationTableBody.appendChild(row);
-
-    
 }
-store();
 
-    document.getElementById("email-error").textContent = "";
-    document.getElementById("birthday-error").textContent = "";
-    
+function check_the_email(email) {
+  if (email.value.includes("@") && email.value.includes(".")) {
+    email.setCustomValidity("");
+  } else {
+    email.setCustomValidity("Invalid Email!");
+    email.reportValidity();
+  }
+}
+
+function check_the_name(name_of_the_user) {
+  if (name_of_the_user.value.length < 3) {
+    name_of_the_user.setCustomValidity(
+      "Name should be atleast threee characters!"
+    );
+    name_of_the_user.reportValidity();
+  } else {
+    name_of_the_user.setCustomValidity("");
+  }
+}
+
+function check_the_tick(tick) {
+  if (!tick.checked) {
+    tick.setCustomValidity("Accept terms and conditions!");
+    tick.reportValidity();
+  } else {
+    tick.setCustomValidity("");
+  }
+}
+
+dob = document.getElementById("dob");
+var password = document.getElementById("password");
+var tick = document.getElementById("check-box");
+var email = document.getElementById("email");
+var name_of_the_user = document.getElementById("name");
+
+email.addEventListener("input", () => check_the_email(email));
+dob.addEventListener("input", () => Check_the_dob(dob));
+name_of_the_user.addEventListener("input", () =>
+  check_the_name(name_of_the_user)
+);
+tick.addEventListener("input", () => check_the_tick(tick));
+
+var get_form = document.getElementById("user-form");
+
+var user_entries = [];
+
+enter_to_the_table = () => {
+  var object_list = localStorage.getItem("user_entries");
+  if (!object_list) {
+    user_entries = [];
+  } else {
+    user_entries = JSON.parse(object_list);
+  }
+  return user_entries;
+};
+user_entries = enter_to_the_table();
+
+create_list_of_object = () => {
+  var check = true;
+  if (!tick.checked) {
+    check = false;
+  }
+  var object_list = {
+    dob: dob.value,
+    password: password.value,
+    email: email.value,
+    checked: check,
+    name: name_of_the_user.value,
+  };
+  return object_list;
+};
+
+show_the_table = () => {
+  var table = document.getElementById("user-table");
+  var objet_of_entries = user_entries;
+  var word = `\n<tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                    <th>Dob</th>
+                    <th>Accepted terms?</th>
+                </tr>`;
+  objet_of_entries.forEach(entry =>{
+    word += `\n<tr>
+                    <td>${entry.name}</td>
+                    <td>${entry.email}</td>
+                    <td>${entry.password}</td>
+                    <td>${entry.dob}</td>
+                    <td>${entry.checked}</td>
+                </tr>`;
+  })
+  table.innerHTML = word;
+};
+
+get_form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  var agree_the_condition = tick.checked;
+  if (agree_the_condition) {
+    var object_list = create_list_of_object();
+    user_entries.push(object_list);
+    localStorage.setItem("user_entries", JSON.stringify(user_entries));
+  }
+  show_the_table();
 });
+
+window.onload = (event) => {
+  show_the_table();
+};
